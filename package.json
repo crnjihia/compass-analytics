@@ -2,6 +2,7 @@
   "name": "compass-analytics",
   "version": "0.1.0",
   "private": true,
+  "prepare": "husky install",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -31,5 +32,8 @@
     "lint-staged": "15.2.10",
     "@commitlint/cli": "19.5.0",
     "@commitlint/config-conventional": "19.5.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": ["npm run lint", "npm test"]
   }
 }

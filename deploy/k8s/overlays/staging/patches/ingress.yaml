@@ -1,8 +1,0 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: compass-ingress
-  namespace: compass
-spec:
-  rules:
-    - host: staging.compass.co.ke

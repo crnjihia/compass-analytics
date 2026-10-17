@@ -1,4 +1,9 @@
 import { router, publicProcedure, protectedProcedure, adminProcedure } from '../trpc';
+import { revenueRouter } from './revenue';
+import { customersRouter } from './customers';
+import { inventoryRouter } from './inventory';
+import { connectionRouter } from './connection';
+import { healthRouter } from './health';
 
 export const appRouter = router({
   health: publicProcedure.query(async ({ ctx }) => {
@@ -41,6 +46,13 @@ export const appRouter = router({
       role: ctx.role,
     };
   }),
+
+  // Domain Sub-Routers
+  revenue: revenueRouter,
+  customers: customersRouter,
+  inventory: inventoryRouter,
+  connection: connectionRouter,
+  systemHealth: healthRouter,
 });
 
 export type AppRouter = typeof appRouter;

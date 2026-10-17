@@ -8,8 +8,37 @@ namePrefix: staging-
 namespace: compass-staging
 
 patches:
-  - path: patches/replicas.yaml
-  - path: patches/ingress.yaml
+  - target:
+      kind: Deployment
+      name: compass-web
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: compass-web
+      spec:
+        replicas: 1
+  - target:
+      kind: Deployment
+      name: compass-ingest
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: compass-ingest
+      spec:
+        replicas: 1
+  - target:
+      kind: Ingress
+      name: compass-ingress
+    patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: compass-ingress
+      spec:
+        rules:
+          - host: staging.compass.co.ke
 
 images:
   - name: ghcr.io/compass/compass-web

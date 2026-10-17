@@ -2,6 +2,8 @@ name: Release & Container Publishing
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*.*.*"
   workflow_dispatch:
@@ -35,7 +37,7 @@ jobs:
         id: meta-web
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/compass-web
+          images: ghcr.io/${{ github.repository_owner }}/compass-web
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -57,7 +59,7 @@ jobs:
         id: meta-ingest
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/compass-ingest
+          images: ghcr.io/${{ github.repository_owner }}/compass-ingest
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -79,13 +81,13 @@ jobs:
     name: Create GitHub Release
     needs: [build-and-push]
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           generate_release_notes: true
           draft: false

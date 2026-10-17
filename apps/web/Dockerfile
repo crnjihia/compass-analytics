@@ -2,12 +2,12 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+RUN npm install -g pnpm@12.9.1
 
 # Stage 1: Dependencies installer
 FROM base AS deps
 WORKDIR /app
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc* ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/db/package.json ./packages/db/
 COPY apps/web/package.json ./apps/web/

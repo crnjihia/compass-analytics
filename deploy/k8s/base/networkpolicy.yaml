@@ -1,0 +1,90 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: compass
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-compass-web
+  namespace: compass
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: compass-web
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow incoming traffic from ALB ingress controller on port 3000
+    - ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow outbound to PostgreSQL (RDS), Redis (ElastiCache), and HTTPS (Clerk/AWS APIs)
+    - ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-compass-ingest
+  namespace: compass
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: compass-ingest
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow incoming Daraja webhooks from ALB on port 8080
+    - ports:
+        - protocol: TCP
+          port: 8080
+    # Allow Prometheus metrics scraping on port 9100
+    - ports:
+        - protocol: TCP
+          port: 9100
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow outbound to PostgreSQL (RDS) and Redis (Streams/PubSub)
+    - ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 443

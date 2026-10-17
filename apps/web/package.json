@@ -16,7 +16,7 @@
     "@compass/shared": "workspace:*",
     "@tanstack/react-query": "^4.44.0",
     "@trpc/client": "^10.45.2",
-    "@trpc/next": "^10.45.2",
+    "@trpc/next": "^11.19.0",
     "@trpc/react-query": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "clsx": "^2.1.1",

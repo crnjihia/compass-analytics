@@ -1,0 +1,62 @@
+groups:
+  - name: compass_mpesa_alerts
+    rules:
+      - alert: MpesaHighWebhookErrorRate
+        expr: (sum(rate(mpesa_webhook_requests_total{status=~"5.."}[5m])) / sum(rate(mpesa_webhook_requests_total[5m]))) * 100 > 1
+        for: 2m
+        labels:
+          severity: critical
+          tier: payments
+        annotations:
+          summary: "High Daraja webhook error rate on {{ $labels.endpoint }}"
+          description: "M-Pesa C2B webhook 5xx error rate is {{ $value | printf \"%.2f\" }}% over the last 5 minutes. Potential Daraja timeout or internal ingestion failure."
+
+      - alert: MpesaWebhookLatencySLAExceeded
+        expr: histogram_quantile(0.99, sum(rate(mpesa_webhook_duration_seconds_bucket[5m])) by (le, endpoint)) > 0.25
+        for: 3m
+        labels:
+          severity: warning
+          tier: payments
+        annotations:
+          summary: "Daraja C2B webhook p99 latency exceeded 250ms SLA"
+          description: "M-Pesa webhook p99 response time on {{ $labels.endpoint }} is {{ $value | printf \"%.3f\" }}s. Safaricom requires fast synchronous 200 OK responses to avoid webhook retries."
+
+      - alert: MpesaQueueBacklogWarning
+        expr: mpesa_queue_depth > 100
+        for: 3m
+        labels:
+          severity: warning
+          tier: streaming
+        annotations:
+          summary: "Redis Stream mpesa:txns backlog building up"
+          description: "M-Pesa ingestion queue depth is currently {{ $value }} pending transactions. Worker consumers may be throttled."
+
+      - alert: MpesaQueueBacklogCritical
+        expr: mpesa_queue_depth > 500
+        for: 2m
+        labels:
+          severity: critical
+          tier: streaming
+        annotations:
+          summary: "Critical Redis Stream queue backlog on mpesa:txns"
+          description: "M-Pesa ingestion queue depth has reached {{ $value }} transactions. Autoscaling workers or checking database write contention required immediately."
+
+      - alert: MpesaWorkerProcessingFailures
+        expr: sum(rate(mpesa_transactions_processed_total{status="failed"}[5m])) > 1
+        for: 2m
+        labels:
+          severity: critical
+          tier: database
+        annotations:
+          summary: "M-Pesa worker transactions failing database ingestion"
+          description: "Worker consumers are failing to insert transactions into PostgreSQL for tenant {{ $labels.org_id }}."
+
+      - alert: CompassServiceDown
+        expr: up{job=~"ingest|web"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          tier: infrastructure
+        annotations:
+          summary: "Compass service instance is unreachable"
+          description: "Instance {{ $labels.instance }} for job {{ $labels.job }} has been down for more than 1 minute."

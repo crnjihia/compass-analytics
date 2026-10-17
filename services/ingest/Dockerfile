@@ -1,5 +1,4 @@
-# Multi-stage Dockerfile for Go M-Pesa Ingestion Service
-FROM golang:1.23-alpine AS builder
+FROM golang:alpine AS builder
 
 WORKDIR /build
 
@@ -10,7 +9,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /build/ingest main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /build/ingest .
 
 # Minimal runtime stage
 FROM alpine:3.20

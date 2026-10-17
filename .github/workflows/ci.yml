@@ -81,10 +81,10 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build Shared Packages
+      - name: Build Monorepo
         run: |
           pnpm run db:generate
-          pnpm --filter @compass/shared run build
+          pnpm run build
 
       - name: Run DB Migrations
         env:

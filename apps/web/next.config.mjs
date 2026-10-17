@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@compass/db', '@compass/shared'],
+  output: 'standalone',
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },

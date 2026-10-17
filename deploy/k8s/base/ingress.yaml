@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: compass-ingress
+  namespace: compass
+  labels:
+    app.kubernetes.io/name: compass-ingress
+    app.kubernetes.io/part-of: compass
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+spec:
+  rules:
+    - host: compass.example.com
+      http:
+        paths:
+          # Route high-throughput Daraja M-Pesa webhooks directly to the Go ingest service
+          - path: /mpesa
+            pathType: Prefix
+            backend:
+              service:
+                name: compass-ingest
+                port:
+                  number: 8080
+          # Route all UI and tRPC API traffic to the Next.js application
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compass-web
+                port:
+                  number: 3000

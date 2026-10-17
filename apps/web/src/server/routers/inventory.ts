@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { formatKes, parseKesToCents } from '@compass/shared';
 import { TRPCError } from '@trpc/server';
+import { withTenantCache, invalidateTenantCache } from '../../lib/cache';
 
 export const inventoryRouter = router({
   /**
@@ -89,42 +90,52 @@ export const inventoryRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const numDays = parseInt(input.days, 10);
-      const sinceDate = new Date(Date.now() - numDays * 86400000);
-
-      const whereClause: any = input.productId ? { id: input.productId } : {};
-      const products = await ctx.db.product.findMany({
-        where: whereClause,
-        include: {
-          salesItems: {
-            where: {
-              soldAt: { gte: sinceDate },
-            },
-            select: { qty: true },
-          },
+      return withTenantCache(
+        {
+          orgId: ctx.orgId,
+          resource: 'inventory:velocity',
+          params: input,
+          ttlSeconds: 120,
         },
-      });
+        async () => {
+          const numDays = parseInt(input.days, 10);
+          const sinceDate = new Date(Date.now() - numDays * 86400000);
 
-      return products.map((p) => {
-        const unitsSold = p.salesItems.reduce((acc, si) => acc + si.qty, 0);
-        const dailyRunRate = Math.round((unitsSold / numDays) * 100) / 100;
-        const daysUntilStockout = dailyRunRate > 0
-          ? Math.max(0, Math.round(p.stockOnHand / dailyRunRate))
-          : null;
+          const whereClause: any = input.productId ? { id: input.productId } : {};
+          const products = await ctx.db.product.findMany({
+            where: whereClause,
+            include: {
+              salesItems: {
+                where: {
+                  soldAt: { gte: sinceDate },
+                },
+                select: { qty: true },
+              },
+            },
+          });
 
-        return {
-          productId: p.id,
-          sku: p.sku,
-          name: p.name,
-          stockOnHand: p.stockOnHand,
-          reorderLevel: p.reorderLevel,
-          periodDays: numDays,
-          unitsSold,
-          dailyRunRate,
-          daysUntilStockout, // null means no sales recorded
-          stockStatus: p.stockOnHand <= 0 ? 'OUT_OF_STOCK' : (p.stockOnHand <= p.reorderLevel ? 'LOW_STOCK' : 'HEALTHY'),
-        };
-      });
+          return products.map((p) => {
+            const unitsSold = p.salesItems.reduce((acc, si) => acc + si.qty, 0);
+            const dailyRunRate = Math.round((unitsSold / numDays) * 100) / 100;
+            const daysUntilStockout = dailyRunRate > 0
+              ? Math.max(0, Math.round(p.stockOnHand / dailyRunRate))
+              : null;
+
+            return {
+              productId: p.id,
+              sku: p.sku,
+              name: p.name,
+              stockOnHand: p.stockOnHand,
+              reorderLevel: p.reorderLevel,
+              periodDays: numDays,
+              unitsSold,
+              dailyRunRate,
+              daysUntilStockout, // null means no sales recorded
+              stockStatus: p.stockOnHand <= 0 ? 'OUT_OF_STOCK' : (p.stockOnHand <= p.reorderLevel ? 'LOW_STOCK' : 'HEALTHY'),
+            };
+          });
+        }
+      );
     }),
 
   /**
@@ -174,6 +185,9 @@ export const inventoryRouter = router({
           },
         }),
       ]);
+
+      // Invalidate tenant cache
+      await invalidateTenantCache(ctx.orgId);
 
       return {
         product: {
@@ -278,6 +292,10 @@ export const inventoryRouter = router({
         } catch (err: any) {
           results.push({ sku, status: 'error', error: err.message });
         }
+      }
+
+      if (results.some((r) => r.status === 'created' || r.status === 'updated')) {
+        await invalidateTenantCache(ctx.orgId);
       }
 
       return {

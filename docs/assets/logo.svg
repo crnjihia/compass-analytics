@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="compassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+    <linearGradient id="needleNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="needleSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark Background -->
+  <rect width="800" height="200" rx="16" fill="#090D16" />
+
+  <!-- Compass Outer Ring -->
+  <g transform="translate(110, 100)">
+    <!-- Outer Glow Circle -->
+    <circle r="68" fill="none" stroke="url(#compassGrad)" stroke-width="2" opacity="0.3" filter="url(#glow)" />
+    <!-- Ticks -->
+    <circle r="62" fill="#0F172A" stroke="#1E293B" stroke-width="2" />
+    <line x1="0" y1="-56" x2="0" y2="-48" stroke="#10B981" stroke-width="3" stroke-linecap="round" />
+    <line x1="56" y1="0" x2="48" y2="0" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+    <line x1="0" y1="56" x2="0" y2="48" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+    <line x1="-56" y1="0" x2="-48" y2="0" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+
+    <!-- 45-degree ticks -->
+    <line x1="38" y1="-38" x2="33" y2="-33" stroke="#475569" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="38" y1="38" x2="33" y2="33" stroke="#475569" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="-38" y1="38" x2="-33" y2="33" stroke="#475569" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="-38" y1="-38" x2="-33" y2="-33" stroke="#475569" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- Compass Needles (Angle: 30 deg) -->
+    <g transform="rotate(30)">
+      <!-- North Needle -->
+      <polygon points="0,-48 10,0 0,-4" fill="url(#needleNorth)" />
+      <polygon points="0,-48 -10,0 0,-4" fill="#34D399" />
+
+      <!-- South Needle -->
+      <polygon points="0,48 10,0 0,4" fill="url(#needleSouth)" />
+      <polygon points="0,48 -10,0 0,4" fill="#475569" />
+
+      <!-- Pivot Center -->
+      <circle r="7" fill="#0F172A" stroke="#10B981" stroke-width="2.5" />
+      <circle r="3" fill="#10B981" />
+    </g>
+  </g>
+
+  <!-- Typography -->
+  <text x="210" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="46" font-weight="800" fill="#F8FAFC" letter-spacing="-0.5">
+    COMPASS <tspan fill="url(#compassGrad)">ANALYTICS</tspan>
+  </text>
+  <text x="212" y="132" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="16" font-weight="500" fill="#94A3B8" letter-spacing="0.2">
+    Multi-Tenant Business Intelligence &amp; M-Pesa Analytics for Kenyan SMEs
+  </text>
+</svg>

@@ -22,7 +22,13 @@ build:
 docker-up:
 	docker compose up -d postgres redis
 
+compose-up:
+	docker compose up -d
+
 docker-down:
+	docker compose down
+
+compose-down:
 	docker compose down
 
 db-generate:

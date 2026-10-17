@@ -1,0 +1,48 @@
+name: Bug Report
+description: Create a report to help us improve Compass Analytics
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Provide reproduction steps with payload examples or tRPC calls.
+      placeholder: |
+        1. Simulate C2B confirmation with payload...
+        2. Query /api/trpc/revenue.summary...
+        3. See error response...
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      options:
+        - apps/web (Next.js Dashboard & tRPC)
+        - services/ingest (Go Daraja Ingest Service)
+        - packages/db (Prisma Schema & RLS)
+        - packages/shared (KES Currency / Crypto)
+        - deploy/k8s (Kubernetes & Helm/Kustomize)
+        - infra/terraform (AWS Infrastructure)
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Info
+      description: OS version, Node/Go version, Docker setup.
+      placeholder: "Windows 11 / WSL2, Node 20.x, Go 1.23, Postgres 16"
+    validations:
+      required: false

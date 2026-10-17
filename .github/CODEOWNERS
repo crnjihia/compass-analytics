@@ -1,0 +1,14 @@
+# Compass Analytics Code Ownership
+* @crnjihia
+
+# Services
+/services/ingest/ @crnjihia
+/apps/web/ @crnjihia
+
+# Packages & Core DB Tenancy
+/packages/db/ @crnjihia
+/packages/shared/ @crnjihia
+
+# Infrastructure & Deployments
+/infra/ @crnjihia
+/deploy/ @crnjihia

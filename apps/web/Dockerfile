@@ -16,14 +16,14 @@ RUN pnpm install --frozen-lockfile
 # Stage 2: Builder
 FROM base AS builder
 WORKDIR /app
+COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY . .
 
 # Generate Prisma Client
-RUN cd packages/db && pnpm run db:generate
+RUN pnpm run db:generate
 
 # Build packages and Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1

@@ -1,0 +1,1 @@
+{"root":["./src/crypto.ts","./src/currency.ts","./src/index.ts","./src/schemas.ts","./src/__tests__/crypto.test.ts","./src/__tests__/currency.test.ts"],"version":"5.9.3"}

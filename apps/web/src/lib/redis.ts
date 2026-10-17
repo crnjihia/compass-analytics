@@ -12,6 +12,14 @@ export const redis =
     lazyConnect: true,
   });
 
+export function createRedisSubscriber(): Redis {
+  return new Redis(REDIS_URL, {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+    lazyConnect: true,
+  });
+}
+
 if (process.env.NODE_ENV !== 'production') {
   globalForRedis.redis = redis;
 }

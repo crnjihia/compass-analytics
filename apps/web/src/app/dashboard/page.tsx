@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   ArrowUpRight,
@@ -11,8 +11,9 @@ import {
   RefreshCw,
   Sparkles,
   Phone,
-  Shield,
+  Radio,
   Layers,
+  Zap,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -25,10 +26,13 @@ import {
 } from 'recharts';
 import { trpc } from '../../utils/trpc';
 import { useTenant } from '../../components/providers';
+import { useLiveRevenue, LiveTransactionEvent } from '../../hooks/useLiveRevenue';
+import { formatKes } from '@compass/shared';
 
 export default function DashboardOverviewPage() {
   const { activeTenant } = useTenant();
   const [timeseriesInterval, setTimeseriesInterval] = useState<'hour' | 'day' | 'week' | 'month'>('day');
+  const [liveAlert, setLiveAlert] = useState<LiveTransactionEvent | null>(null);
 
   // Queries
   const { data: summary, isLoading: isSummaryLoading, refetch: refetchSummary } = trpc.revenue.summary.useQuery();
@@ -46,6 +50,20 @@ export default function DashboardOverviewPage() {
     refetchRecent();
   };
 
+  // Real-Time SSE Stream with Polling Fallback
+  const { status: streamStatus, lastTransaction, isPolling } = useLiveRevenue({
+    orgId: activeTenant.id,
+    onTransaction: (txn) => {
+      setLiveAlert(txn);
+      // Auto-hide alert after 8 seconds
+      setTimeout(() => setLiveAlert(null), 8000);
+    },
+    onRefetchNeeded: () => {
+      refetchSummary();
+      refetchRecent();
+    },
+  });
+
   // Prepare chart data with numeric shillings for Recharts
   const chartData = (timeseries || []).map((item) => ({
     bucket: item.bucket,
@@ -56,6 +74,36 @@ export default function DashboardOverviewPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Real-time incoming transaction banner alert */}
+      {liveAlert && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-slate-900 border border-emerald-500/40 shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <Zap className="w-5 h-5 animate-bounce" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  New M-Pesa Payment Received!
+                </span>
+                <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono">
+                  {liveAlert.mpesaReceipt}
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-white">
+                {formatKes(liveAlert.amountCents)} from {liveAlert.customerName} ({liveAlert.maskedMsisdn})
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setLiveAlert(null)}
+            className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -63,9 +111,24 @@ export default function DashboardOverviewPage() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
               Revenue Analytics
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Live M-Pesa
-            </span>
+            {streamStatus === 'connected' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm shadow-emerald-500/10">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                SSE STREAM LIVE
+              </span>
+            )}
+            {streamStatus === 'reconnecting' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                RECONNECTING SSE...
+              </span>
+            )}
+            {streamStatus === 'polling' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <RefreshCw className="w-3 h-3 animate-spin text-purple-400" />
+                POLLING FALLBACK (5s)
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-400">
             Real-time financial flow for <span className="text-slate-200 font-medium">{activeTenant.name}</span>{' '}
@@ -185,20 +248,22 @@ export default function DashboardOverviewPage() {
         <div className="p-5 rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 hover:border-slate-700/80 transition-all shadow-lg relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all"></div>
           <div className="flex items-center justify-between text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">
-            <span>Settlement Health</span>
+            <span>Live Stream Engine</span>
             <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
-              <Clock className="w-4 h-4" />
+              <Radio className="w-4 h-4" />
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl lg:text-3xl font-bold text-emerald-400 tracking-tight">
-              99.98%
+            <div className="text-2xl lg:text-3xl font-bold text-emerald-400 tracking-tight font-mono">
+              {isPolling ? 'POLL' : 'SSE'}
             </div>
-            <p className="text-xs text-slate-400">Daraja webhook delivery rate</p>
+            <p className="text-xs text-slate-400">
+              {isPolling ? 'Fallback HTTP mode active' : 'Direct Redis stream push'}
+            </p>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
-            <span>Average Latency:</span>
-            <span className="text-emerald-400 font-mono font-semibold">~280ms</span>
+            <span>Channel:</span>
+            <span className="text-emerald-400 font-mono font-semibold">org:{activeTenant.id}:txn</span>
           </div>
         </div>
       </div>

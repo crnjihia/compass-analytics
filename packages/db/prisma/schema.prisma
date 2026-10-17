@@ -1,0 +1,143 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+model Organization {
+  id         String   @id @default(uuid())
+  clerkOrgId String   @unique @map("clerk_org_id")
+  name       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("organizations")
+}
+
+model MpesaConnection {
+  id                String   @id @default(uuid())
+  orgId             String   @map("org_id")
+  shortcode         String
+  shortcodeType     String   @map("shortcode_type") // PAYBILL | TILL
+  consumerKeyEnc    String   @map("consumer_key_enc")
+  consumerSecretEnc String   @map("consumer_secret_enc")
+  passkeyEnc        String   @map("passkey_enc")
+  callbackSecret    String   @map("callback_secret")
+  status            String   @default("ACTIVE") // ACTIVE | INACTIVE | ERROR
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@unique([orgId, shortcode])
+  @@map("mpesa_connections")
+}
+
+model Transaction {
+  id           String      @id @default(uuid())
+  orgId        String      @map("org_id")
+  mpesaReceipt String      @map("mpesa_receipt")
+  msisdnHash   String      @map("msisdn_hash")
+  maskedMsisdn String      @map("masked_msisdn")
+  customerName String?     @map("customer_name")
+  amountCents  BigInt      @map("amount_cents")
+  billRef      String?     @map("bill_ref")
+  paidAt       DateTime    @map("paid_at")
+  raw          Json        @map("raw")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  salesItems   SalesItem[]
+
+  @@unique([orgId, mpesaReceipt])
+  @@index([orgId, paidAt(sort: Desc)])
+  @@map("transactions")
+}
+
+model Customer {
+  id           String   @id @default(uuid())
+  orgId        String   @map("org_id")
+  msisdnHash   String   @map("msisdn_hash")
+  maskedMsisdn String   @map("masked_msisdn")
+  customerName String?  @map("customer_name")
+  firstSeenAt  DateTime @map("first_seen_at")
+  lastSeenAt   DateTime @map("last_seen_at")
+  txnCount     Int      @default(0) @map("txn_count")
+  ltvCents     BigInt   @default(0) @map("ltv_cents")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([orgId, msisdnHash])
+  @@index([orgId, ltvCents(sort: Desc)])
+  @@map("customers")
+}
+
+model Product {
+  id             String          @id @default(uuid())
+  orgId          String          @map("org_id")
+  sku            String
+  name           String
+  priceCents     BigInt          @map("price_cents")
+  stockOnHand    Int             @default(0) @map("stock_on_hand")
+  reorderLevel   Int             @default(10) @map("reorder_level")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  salesItems     SalesItem[]
+  stockMovements StockMovement[]
+
+  @@unique([orgId, sku])
+  @@index([orgId, stockOnHand])
+  @@map("products")
+}
+
+model SalesItem {
+  id             String       @id @default(uuid())
+  orgId          String       @map("org_id")
+  transactionId  String?      @map("transaction_id")
+  transaction    Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  productId      String       @map("product_id")
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  qty            Int          @map("qty")
+  unitPriceCents BigInt       @map("unit_price_cents")
+  soldAt         DateTime     @default(now()) @map("sold_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([orgId, soldAt(sort: Desc)])
+  @@map("sales_items")
+}
+
+model StockMovement {
+  id        String   @id @default(uuid())
+  orgId     String   @map("org_id")
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  delta     Int      @map("delta")
+  reason    String   @map("reason")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([orgId, productId])
+  @@map("stock_movements")
+}
+
+model RevenueHourly {
+  id         String   @id @default(uuid())
+  orgId      String   @map("org_id")
+  bucket     DateTime @map("bucket")
+  totalCents BigInt   @default(0) @map("total_cents")
+  txnCount   Int      @default(0) @map("txn_count")
+
+  @@unique([orgId, bucket])
+  @@index([orgId, bucket(sort: Desc)])
+  @@map("revenue_hourly")
+}
+
+model CohortMonthly {
+  id              String   @id @default(uuid())
+  orgId           String   @map("org_id")
+  cohortMonth     DateTime @map("cohort_month")
+  periodN         Int      @map("period_n")
+  activeCustomers Int      @default(0) @map("active_customers")
+
+  @@unique([orgId, cohortMonth, periodN])
+  @@index([orgId, cohortMonth])
+  @@map("cohort_monthly")
+}

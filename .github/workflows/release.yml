@@ -109,6 +109,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          name: "Compass Analytics ${{ github.ref_name }}"
+          body_path: RELEASE_NOTES.md
           generate_release_notes: true
           draft: false
           prerelease: false

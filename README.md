@@ -8,6 +8,7 @@
 
   <p align="center">
     <a href="https://github.com/crnjihia/compass-analytics/actions/workflows/ci.yml"><img src="https://github.com/crnjihia/compass-analytics/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
+    <a href="https://crnjihia.github.io/compass-analytics/"><img src="https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-10b981.svg" alt="GitHub Pages Live Demo" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
     <a href="https://github.com/crnjihia/compass-analytics/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-emerald.svg" alt="Release v1.0.0" /></a>
     <img src="https://img.shields.io/badge/Language-TypeScript%20%7C%20Go-007acc.svg" alt="TypeScript and Go" />

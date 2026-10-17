@@ -15,3 +15,4 @@ resources:
   - ingest/deployment.yaml
   - ingest/service.yaml
   - ingest/hpa.yaml
+  - servicemonitor.yaml

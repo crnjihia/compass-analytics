@@ -81,13 +81,16 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build Shared Packages
+        run: |
+          pnpm run db:generate
+          pnpm --filter @compass/shared run build
+
       - name: Run DB Migrations
         env:
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/compass_analytics"
           DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/compass_analytics"
-        run: |
-          pnpm run db:generate
-          pnpm run db:migrate
+        run: pnpm run db:migrate
 
       - name: Seed Database
         env:

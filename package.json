@@ -1,38 +1,33 @@
 {
-  "name": "compass-analytics",
+  "name": "compass-analytics-monorepo",
   "version": "0.1.0",
   "private": true,
-  "prepare": "husky install",
+  "packageManager": "pnpm@12.9.1",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "test": "jest"
-  },
-  "dependencies": {
-    "next": "14.2.0",
-    "react": "18.3.0",
-    "react-dom": "18.3.0",
-    "@trpc/server": "10.45.0",
-    "@trpc/client": "10.45.0",
-    "@trpc/react-query": "10.45.0",
-    "recharts": "2.13.1",
-    "tailwindcss": "3.4.1"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @compass/db run generate",
+    "db:migrate": "pnpm --filter @compass/db run migrate",
+    "db:seed": "pnpm --filter @compass/db run seed",
+    "seed": "pnpm run db:seed",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
-    "typescript": "5.5.4",
-    "@types/react": "18.3.3",
-    "@types/node": "22.5.5",
-    "jest": "29.7.0",
-    "@types/jest": "29.5.12",
-    "husky": "9.1.4",
-    "lint-staged": "15.2.10",
-    "@commitlint/cli": "19.5.0",
-    "@commitlint/config-conventional": "19.5.0"
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.2",
+    "typescript": "^5.5.4"
   },
-  "lint-staged": {
-    "*.{js,ts,tsx}": ["npm run lint", "npm test"]
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@clerk/shared",
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
   }
 }

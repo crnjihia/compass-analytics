@@ -1,50 +1,60 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { formatKes } from '@compass/shared';
+import { withTenantCache } from '../../lib/cache';
 
 export const customersRouter = router({
   /**
    * Monthly Cohort Retention Matrix
    */
   cohorts: protectedProcedure.query(async ({ ctx }) => {
-    const rawCohorts = await ctx.db.cohortMonthly.findMany({
-      orderBy: [
-        { cohortMonth: 'asc' },
-        { periodN: 'asc' },
-      ],
-    });
+    return withTenantCache(
+      {
+        orgId: ctx.orgId,
+        resource: 'customers:cohorts',
+        ttlSeconds: 300,
+      },
+      async () => {
+        const rawCohorts = await ctx.db.cohortMonthly.findMany({
+          orderBy: [
+            { cohortMonth: 'asc' },
+            { periodN: 'asc' },
+          ],
+        });
 
-    // Group by cohortMonth
-    const cohortsMap = new Map<string, { cohortMonth: string; initialCustomers: number; retention: { period: number; active: number; rate: number }[] }>();
+        // Group by cohortMonth
+        const cohortsMap = new Map<string, { cohortMonth: string; initialCustomers: number; retention: { period: number; active: number; rate: number }[] }>();
 
-    for (const entry of rawCohorts) {
-      const monthKey = entry.cohortMonth.toISOString().slice(0, 7); // YYYY-MM
-      let cohort = cohortsMap.get(monthKey);
+        for (const entry of rawCohorts) {
+          const monthKey = entry.cohortMonth.toISOString().slice(0, 7); // YYYY-MM
+          let cohort = cohortsMap.get(monthKey);
 
-      if (!cohort) {
-        cohort = {
-          cohortMonth: monthKey,
-          initialCustomers: entry.periodN === 0 ? entry.activeCustomers : 0,
-          retention: [],
-        };
-        cohortsMap.set(monthKey, cohort);
+          if (!cohort) {
+            cohort = {
+              cohortMonth: monthKey,
+              initialCustomers: entry.periodN === 0 ? entry.activeCustomers : 0,
+              retention: [],
+            };
+            cohortsMap.set(monthKey, cohort);
+          }
+
+          if (entry.periodN === 0) {
+            cohort.initialCustomers = entry.activeCustomers;
+          }
+
+          const initial = cohort.initialCustomers || entry.activeCustomers || 1;
+          const rate = Math.round((entry.activeCustomers / initial) * 1000) / 10;
+
+          cohort.retention.push({
+            period: entry.periodN,
+            active: entry.activeCustomers,
+            rate,
+          });
+        }
+
+        return Array.from(cohortsMap.values());
       }
-
-      if (entry.periodN === 0) {
-        cohort.initialCustomers = entry.activeCustomers;
-      }
-
-      const initial = cohort.initialCustomers || entry.activeCustomers || 1;
-      const rate = Math.round((entry.activeCustomers / initial) * 1000) / 10;
-
-      cohort.retention.push({
-        period: entry.periodN,
-        active: entry.activeCustomers,
-        rate,
-      });
-    }
-
-    return Array.from(cohortsMap.values());
+    );
   }),
 
   /**
@@ -78,25 +88,34 @@ export const customersRouter = router({
    * Repeat Customer Rate & Metrics
    */
   repeatRate: protectedProcedure.query(async ({ ctx }) => {
-    const [totalCustomers, repeatCustomers] = await Promise.all([
-      ctx.db.customer.count(),
-      ctx.db.customer.count({
-        where: {
-          txnCount: { gt: 1 },
-        },
-      }),
-    ]);
+    return withTenantCache(
+      {
+        orgId: ctx.orgId,
+        resource: 'customers:repeatRate',
+        ttlSeconds: 120,
+      },
+      async () => {
+        const [totalCustomers, repeatCustomers] = await Promise.all([
+          ctx.db.customer.count(),
+          ctx.db.customer.count({
+            where: {
+              txnCount: { gt: 1 },
+            },
+          }),
+        ]);
 
-    const rate = totalCustomers > 0
-      ? Math.round((repeatCustomers / totalCustomers) * 1000) / 10
-      : 0;
+        const rate = totalCustomers > 0
+          ? Math.round((repeatCustomers / totalCustomers) * 1000) / 10
+          : 0;
 
-    return {
-      totalCustomers,
-      repeatCustomers,
-      oneTimeCustomers: totalCustomers - repeatCustomers,
-      repeatRatePercentage: rate,
-    };
+        return {
+          totalCustomers,
+          repeatCustomers,
+          oneTimeCustomers: totalCustomers - repeatCustomers,
+          repeatRatePercentage: rate,
+        };
+      }
+    );
   }),
 
   /**

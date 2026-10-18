@@ -14,7 +14,7 @@
     "@clerk/nextjs": "^5.3.3",
     "@compass/db": "workspace:*",
     "@compass/shared": "workspace:*",
-    "@tanstack/react-query": "^4.44.0",
+    "@tanstack/react-query": "^5.104.2",
     "@trpc/client": "^10.45.2",
     "@trpc/next": "^10.45.2",
     "@trpc/react-query": "^10.45.2",

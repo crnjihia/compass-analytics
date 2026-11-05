@@ -36,7 +36,3 @@ make test   # runs unit, integration, and e2e tests
 ## Good First Issues
 
 Look for the `good first issue` label in the issue tracker. These are small, self‑contained tasks that are a great way to get familiar with the codebase.
-
-## Code of Conduct
-
-By participating, you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md).

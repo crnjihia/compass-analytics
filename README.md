@@ -266,7 +266,7 @@ Key architectural decisions are documented as formal ADRs in [`docs/adr/`](docs/
 
 ## Contributing
 
-Contributions are welcomed. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and adhere to our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Contributions are welcomed. Please read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

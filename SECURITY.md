@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please **do not** publish it publicly. Instead, disclose it privately by emailing the security contact at [INSERT SECURITY EMAIL]. Include:
+If you discover a security vulnerability, please **do not** publish it publicly. Instead, disclose it privately by emailing the security contact at crnjihia@gmail.com. Include:
 
 - A brief description of the issue
 - Steps to reproduce (if applicable)

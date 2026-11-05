@@ -1,5 +1,29 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "REDIS_URL",
+    "AUTH_MODE",
+    "NEXT_PUBLIC_AUTH_MODE",
+    "CLERK_SECRET_KEY",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+    "CLERK_WEBHOOK_SECRET",
+    "NODE_ENV",
+    "CI"
+  ],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "REDIS_URL",
+    "AUTH_MODE",
+    "NEXT_PUBLIC_AUTH_MODE",
+    "CLERK_SECRET_KEY",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+    "CLERK_WEBHOOK_SECRET",
+    "NODE_ENV",
+    "CI"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -7,7 +31,20 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": []
+      "outputs": [],
+      "cache": false,
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "DIRECT_URL",
+        "REDIS_URL",
+        "AUTH_MODE",
+        "NEXT_PUBLIC_AUTH_MODE",
+        "CLERK_SECRET_KEY",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "CLERK_WEBHOOK_SECRET",
+        "NODE_ENV",
+        "CI"
+      ]
     },
     "lint": {
       "dependsOn": ["^build"]

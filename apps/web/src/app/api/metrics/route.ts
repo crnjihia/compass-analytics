@@ -1,0 +1,19 @@
+import { NextResponse } from 'next/server';
+import client from 'prom-client';
+
+// Register default metrics once (cpu, memory, event loop, etc.)
+client.collectDefaultMetrics({
+  prefix: 'compass_',
+  timeout: 5000,
+});
+
+export async function GET() {
+  const metrics = await client.register.metrics();
+  return new NextResponse(metrics, {
+    headers: {
+      'Content-Type': client.register.contentType,
+    },
+  });
+}
+
+export const dynamic = 'force-dynamic'; // Ensure endpoint is not cached

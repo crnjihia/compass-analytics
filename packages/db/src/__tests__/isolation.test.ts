@@ -7,8 +7,26 @@ import path from 'path';
 
 dotenv.config();
 
-const APP_DATABASE_URL =
-  process.env.DATABASE_URL || 'postgresql://compass_app:compass_secret@localhost:5432/compass_analytics?sslmode=disable';
+function getAppDatabaseUrl(): string {
+  if (process.env.APP_DATABASE_URL) {
+    return process.env.APP_DATABASE_URL;
+  }
+  const rawUrl =
+    process.env.DATABASE_URL || 'postgresql://compass_app:compass_secret@localhost:5432/compass_analytics?sslmode=disable';
+  try {
+    const parsed = new URL(rawUrl);
+    // Explicitly enforce the unprivileged compass_app credentials to test RLS boundaries
+    if (parsed.username !== 'compass_app') {
+      parsed.username = 'compass_app';
+      parsed.password = 'compass_secret';
+    }
+    return parsed.toString();
+  } catch {
+    return 'postgresql://compass_app:compass_secret@localhost:5432/compass_analytics?sslmode=disable';
+  }
+}
+
+const APP_DATABASE_URL = getAppDatabaseUrl();
 
 const ORG_A = 'org_baraka_hardware';
 const ORG_B = 'org_nairobi_fresh';

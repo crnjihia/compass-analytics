@@ -12,7 +12,8 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 // Provide safe defaults if unset so test runners never crash on Prisma or Clerk initialization
 process.env.DATABASE_URL =
-  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/compass_analytics';
+  process.env.DATABASE_URL ||
+  'postgresql://compass_app:compass_secret@localhost:5432/compass_analytics?sslmode=disable';
 process.env.DIRECT_URL = process.env.DIRECT_URL || process.env.DATABASE_URL;
 process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 process.env.AUTH_MODE = process.env.AUTH_MODE || 'dev';

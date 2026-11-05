@@ -55,6 +55,20 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
+          - name: Generate SBOM for Web Image
+            run: |
+              curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $HOME/.local/bin
+              $HOME/.local/bin/syft packages ${{ steps.meta-web.outputs.tags }} -o spdx-json - > sbom-web.spdx.json
+            shell: bash
+            env:
+              DOCKER_CONTENT_TRUST: 0
+
+          - name: Upload Web SBOM
+            uses: actions/upload-artifact@v4
+            with:
+              name: sbom-web
+              path: sbom-web.spdx.json
+
   build-ingest:
     name: Build & Push Compass Ingest
     runs-on: ubuntu-latest
@@ -96,6 +110,20 @@ jobs:
           labels: ${{ steps.meta-ingest.outputs.labels }}
           cache-from: type=gha,scope=ingest
           cache-to: type=gha,mode=max,scope=ingest
+
+          - name: Generate SBOM for Ingest Image
+            run: |
+              curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $HOME/.local/bin
+              $HOME/.local/bin/syft packages ${{ steps.meta-ingest.outputs.tags }} -o spdx-json - > sbom-ingest.spdx.json
+            shell: bash
+            env:
+              DOCKER_CONTENT_TRUST: 0
+
+          - name: Upload Ingest SBOM
+            uses: actions/upload-artifact@v4
+            with:
+              name: sbom-ingest
+              path: sbom-ingest.spdx.json
 
   create-github-release:
     name: Create GitHub Release

@@ -1,5 +1,6 @@
 'use client';
 
+import { ClerkProvider } from '@clerk/nextjs';
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
@@ -48,6 +49,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [activeTenant, setActiveTenant] = useState<TenantInfo>(DEMO_TENANTS[0]);
   const [activeRole, setActiveRole] = useState<'org:admin' | 'org:member'>('org:admin');
 
+  const isDev = process.env.NEXT_PUBLIC_AUTH_MODE === 'dev';
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -61,35 +64,40 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   const trpcClient = useMemo(() => {
+    const batchLinkOpts: any = { url: '/api/trpc' };
+    if (isDev) {
+      batchLinkOpts.headers = () => ({
+        'x-mock-user-id': `user_${activeTenant.id}`,
+        'x-mock-org-id': activeTenant.id,
+        'x-mock-role': activeRole,
+      });
+    }
     return trpc.createClient({
       transformer: superjson,
-      links: [
-        httpBatchLink({
-          url: '/api/trpc',
-          headers() {
-            return {
-              'x-mock-user-id': `user_${activeTenant.id}`,
-              'x-mock-org-id': activeTenant.id,
-              'x-mock-role': activeRole,
-            };
-          },
-        }),
-      ],
+      links: [httpBatchLink(batchLinkOpts)],
     });
-  }, [activeTenant.id, activeRole]);
+  }, [activeTenant.id, activeRole, isDev]);
 
+  if (isDev) {
+    // Development mode: demo tenants and mock auth headers
+    return (
+      <TenantContext.Provider
+        value={{ activeTenant, setActiveTenant, activeRole, setActiveRole }}
+      >
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </trpc.Provider>
+      </TenantContext.Provider>
+    );
+  }
+
+  // Production mode: real Clerk authentication
   return (
-    <TenantContext.Provider
-      value={{
-        activeTenant,
-        setActiveTenant,
-        activeRole,
-        setActiveRole,
-      }}
-    >
+    <ClerkProvider>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </trpc.Provider>
-    </TenantContext.Provider>
+    </ClerkProvider>
   );
 }
+

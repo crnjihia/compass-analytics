@@ -88,3 +88,8 @@ Two pre-configured tenants are seeded by default:
 2. **Nairobi Fresh Grocers** (`org_nairobi_fresh`): Fresh produce distribution chain in Westlands & City Park.
 
 Use the tenant switcher in the dashboard navigation bar to toggle between organizations and observe Row-Level Security in action. All revenue cards, customer cohort tables, and inventory velocity metrics instantly scope to the selected tenant without data bleed.
+
+### Forcing Polling Mode
+
+During development you can bypass the SSE connection and force the dashboard to use polling by adding the query parameter `?forcePoll=1` to any page URL (e.g., `http://localhost:3000/dashboard?forcePoll=1`). This is useful for testing the fallback logic or when running behind proxies that block SSE.
+

@@ -2,7 +2,8 @@ import { PrismaClient, Prisma } from '../generated/client';
 
 // Provide standard PostgreSQL URL fallback if runtime environment variable is stripped
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/compass_analytics';
+  process.env.DATABASE_URL =
+    'postgresql://compass_app:compass_secret@localhost:5432/compass_analytics?sslmode=disable';
 }
 
 /**

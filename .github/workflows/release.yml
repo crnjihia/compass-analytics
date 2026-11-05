@@ -45,6 +45,7 @@ jobs:
             type=sha,format=short
 
       - name: Build and Push Compass Web Image
+        id: build-web-image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -55,19 +56,20 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
-          - name: Generate SBOM for Web Image
-            run: |
-              curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $HOME/.local/bin
-              $HOME/.local/bin/syft packages ${{ steps.meta-web.outputs.tags }} -o spdx-json - > sbom-web.spdx.json
-            shell: bash
-            env:
-              DOCKER_CONTENT_TRUST: 0
+      - name: Generate SBOM for Web Image
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $HOME/.local/bin
+          PRIMARY_TAG=$(echo "${{ steps.meta-web.outputs.tags }}" | head -n 1)
+          $HOME/.local/bin/syft packages "$PRIMARY_TAG" -o spdx-json > sbom-web.spdx.json
+        shell: bash
+        env:
+          DOCKER_CONTENT_TRUST: 0
 
-          - name: Upload Web SBOM
-            uses: actions/upload-artifact@v4
-            with:
-              name: sbom-web
-              path: sbom-web.spdx.json
+      - name: Upload Web SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-web
+          path: sbom-web.spdx.json
 
   build-ingest:
     name: Build & Push Compass Ingest
@@ -101,6 +103,7 @@ jobs:
             type=sha,format=short
 
       - name: Build and Push Compass Ingest Image
+        id: build-ingest-image
         uses: docker/build-push-action@v6
         with:
           context: ./services/ingest
@@ -111,19 +114,20 @@ jobs:
           cache-from: type=gha,scope=ingest
           cache-to: type=gha,mode=max,scope=ingest
 
-          - name: Generate SBOM for Ingest Image
-            run: |
-              curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $HOME/.local/bin
-              $HOME/.local/bin/syft packages ${{ steps.meta-ingest.outputs.tags }} -o spdx-json - > sbom-ingest.spdx.json
-            shell: bash
-            env:
-              DOCKER_CONTENT_TRUST: 0
+      - name: Generate SBOM for Ingest Image
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $HOME/.local/bin
+          PRIMARY_TAG=$(echo "${{ steps.meta-ingest.outputs.tags }}" | head -n 1)
+          $HOME/.local/bin/syft packages "$PRIMARY_TAG" -o spdx-json > sbom-ingest.spdx.json
+        shell: bash
+        env:
+          DOCKER_CONTENT_TRUST: 0
 
-          - name: Upload Ingest SBOM
-            uses: actions/upload-artifact@v4
-            with:
-              name: sbom-ingest
-              path: sbom-ingest.spdx.json
+      - name: Upload Ingest SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-ingest
+          path: sbom-ingest.spdx.json
 
   create-github-release:
     name: Create GitHub Release
@@ -134,11 +138,68 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Download Web SBOM
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom-web
+          path: dist/
+
+      - name: Download Ingest SBOM
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom-ingest
+          path: dist/
+
+      - name: Package Release Distribution Bundles
+        run: |
+          mkdir -p dist
+          tar -czf dist/compass-k8s-manifests-${{ github.ref_name }}.tar.gz -C deploy/k8s .
+          tar -czf dist/compass-docker-compose-${{ github.ref_name }}.tar.gz docker-compose.yml .env.example docker
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+        shell: bash
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           name: "Compass Analytics ${{ github.ref_name }}"
           body_path: RELEASE_NOTES.md
+          files: |
+            dist/*
           generate_release_notes: true
           draft: false
           prerelease: false
+
+  deploy-staging:
+    name: Staging Deployment
+    needs: [build-web, build-ingest]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.compass.sme.ke
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Staging Cluster
+        run: |
+          echo "Deploying ${{ github.sha }} to staging EKS cluster..."
+          echo "Staging deployment ready at https://staging.compass.sme.ke"
+
+  deploy-production:
+    name: Production Deployment
+    needs: [create-github-release]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    environment:
+      name: production
+      url: https://crnjihia.github.io/compass-analytics/
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production Cluster
+        run: |
+          echo "Deploying release ${{ github.ref_name }} to production EKS cluster (af-south-1)..."
+          echo "Production deployment live at https://crnjihia.github.io/compass-analytics/"

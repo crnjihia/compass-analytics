@@ -31,9 +31,9 @@ Kenyan retail SMEs process over 80% of their daily revenues through Safaricom M-
 - 💰 **Exact Integer Currency**: All financial ledgers store money as 64-bit integer Kenyan Shilling cents (`BigInt`), completely eliminating IEEE 754 floating-point rounding errors.
 - 📡 **Real-Time Heartbeat Stream**: Server-Sent Events (SSE) stream subscribing to Redis Pub/Sub, delivering live incoming payment alerts without polling overhead.
 - 🚀 **SingleFlight Stampede Protection**: In-memory concurrency barrier coalesces concurrent cache misses during peak hours; $O(1)$ tenant-wide cache invalidation via Redis atomic counters.
-- 📊 **Kenyan SME Intelligence**: Cohort retention heatmaps, stockout run-rate velocity forecasting, and CSV transaction reconciliation for Nairobi retailers.
 - 📅 **Date‑Range Filtering**: Interactive date picker on the revenue chart lets users query custom intervals without reloading the page.
 - 📈 **Inventory Sparkline Trend**: Mini line‑chart per product visualizes a 7‑day stock trajectory, highlighting rapid depletion.
+- 📊 **Kenyan SME Intelligence**: Cohort retention heatmaps, stockout run‑rate velocity forecasting, and CSV transaction reconciliation for Nairobi retailers.
 - ☸️ **Production Infrastructure**: Complete AWS Terraform (VPC, RDS, ElastiCache, EKS 1.30, KMS) and Kubernetes Kustomize manifests with zero-trust NetworkPolicies and HPA autoscaling.
 
 ---

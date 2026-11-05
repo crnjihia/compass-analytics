@@ -24,35 +24,44 @@ export async function createContext(opts?: FetchCreateContextFnOptions): Promise
   let orgId: string | null = null;
   let role: UserRole | null = null;
 
-  // 1. Check for testing/mock headers in non-production environments
-  if (process.env.NODE_ENV !== 'production' && opts?.req) {
-    const mockUserId = opts.req.headers.get('x-mock-user-id');
-    const mockOrgId = opts.req.headers.get('x-mock-org-id');
-    const mockRole = opts.req.headers.get('x-mock-role') as UserRole | null;
+  // 1. Development mode fake auth (AUTH_MODE=dev)
+  // Allows starting the app without real Clerk credentials.
+  // Returns a deterministic developer user / org.
+  if (process.env.AUTH_MODE === 'dev') {
+    userId = 'dev_user_001';
+    orgId = process.env.DEV_ORG_ID ?? 'org_demo_dev';
+    role = 'org:admin'; // admin by default for full access in dev mode
+  } else {
+    // 2. Check for testing/mock headers in non-production environments
+    if (process.env.NODE_ENV !== 'production' && opts?.req) {
+      const mockUserId = opts.req.headers.get('x-mock-user-id');
+      const mockOrgId = opts.req.headers.get('x-mock-org-id');
+      const mockRole = opts.req.headers.get('x-mock-role') as UserRole | null;
 
-    if (mockUserId) {
-      userId = mockUserId;
-      orgId = mockOrgId || null;
-      role = mockRole || 'org:member';
+      if (mockUserId) {
+        userId = mockUserId;
+        orgId = mockOrgId || null;
+        role = mockRole || 'org:member';
+      }
+    }
+
+    // 3. Resolve from Clerk session if not set by test mock
+    if (!userId) {
+      try {
+        const session = await auth();
+        userId = session.userId || null;
+        orgId = session.orgId || null;
+        role = (session.orgRole as UserRole) || null;
+      } catch {
+        // In isolated environments or non‑SSR contexts where Clerk session is absent
+        userId = null;
+        orgId = null;
+        role = null;
+      }
     }
   }
 
-  // 2. Resolve from Clerk session if not set by test mock
-  if (!userId) {
-    try {
-      const session = await auth();
-      userId = session.userId || null;
-      orgId = session.orgId || null;
-      role = (session.orgRole as UserRole) || null;
-    } catch {
-      // In isolated environments or non-SSR contexts where Clerk session is absent
-      userId = null;
-      orgId = null;
-      role = null;
-    }
-  }
-
-  // 3. Initialize tenant-scoped database client if orgId is active
+  // 4. Initialize tenant‑scoped database client if orgId is active
   const db = orgId ? createTenantDb(orgId, prisma) : null;
 
   return {

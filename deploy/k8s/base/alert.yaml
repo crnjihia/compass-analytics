@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alert-rules
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+
+data:
+  alerts.yml: |
+    groups:
+    - name: compass-alerts
+      rules:
+      - alert: HighAPILatencyP95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"compass-web\"}[5m])) by (le)) > 0.3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p95 latency on the Compass web API"
+          description: "The 95th percentile latency of the Compass web API has exceeded 300ms."
+      - alert: RedisStreamLagHigh
+        expr: redis_stream_length{job=\"compass-ingest\"} > 1000
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis stream length high"
+          description: "The Redis stream length for mpesa:txns exceeds 1000 messages, indicating possible consumer lag."
+      - alert: IngestServiceDown
+        expr: up{job=\"compass-ingest\"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Compass ingest service down"
+          description: "Prometheus cannot scrape the ingest service metrics, indicating it may be unavailable."

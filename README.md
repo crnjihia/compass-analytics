@@ -32,6 +32,8 @@ Kenyan retail SMEs process over 80% of their daily revenues through Safaricom M-
 - 📡 **Real-Time Heartbeat Stream**: Server-Sent Events (SSE) stream subscribing to Redis Pub/Sub, delivering live incoming payment alerts without polling overhead.
 - 🚀 **SingleFlight Stampede Protection**: In-memory concurrency barrier coalesces concurrent cache misses during peak hours; $O(1)$ tenant-wide cache invalidation via Redis atomic counters.
 - 📊 **Kenyan SME Intelligence**: Cohort retention heatmaps, stockout run-rate velocity forecasting, and CSV transaction reconciliation for Nairobi retailers.
+- 📅 **Date‑Range Filtering**: Interactive date picker on the revenue chart lets users query custom intervals without reloading the page.
+- 📈 **Inventory Sparkline Trend**: Mini line‑chart per product visualizes a 7‑day stock trajectory, highlighting rapid depletion.
 - ☸️ **Production Infrastructure**: Complete AWS Terraform (VPC, RDS, ElastiCache, EKS 1.30, KMS) and Kubernetes Kustomize manifests with zero-trust NetworkPolicies and HPA autoscaling.
 
 ---
@@ -105,7 +107,8 @@ Visit **[http://localhost:3000](http://localhost:3000)** in your browser.
 | `DIRECT_URL` | Direct PostgreSQL connection for migrations | `postgresql://postgres:postgres@localhost:5432/compass_analytics` |
 | `REDIS_URL` | Redis connection for cache and streams | `redis://localhost:6379` |
 | `DARAJA_ENCRYPTION_KEY` | 32-byte hex key for AES-256-GCM secret storage | *Generated in setup* |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk Authentication publishable key | `pk_test_...` |
+| `AUTH_MODE` | Authentication mode (`dev` for mock auth, omitted or `prod` for real Clerk) | `dev` |
+| `DEV_ORG_ID` | Development organization used when `AUTH_MODE=dev` | `org_demo_dev` |
 | `CLERK_SECRET_KEY` | Clerk Authentication backend API secret | `sk_test_...` |
 | `PORT` | Next.js HTTP server port | `3000` |
 | `INGEST_PORT` | Go Ingest HTTP server port | `8080` |

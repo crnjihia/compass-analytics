@@ -14,6 +14,7 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react';
+import Sparkline from '../../../components/Sparkline';
 import { trpc } from '../../../utils/trpc';
 import { useTenant } from '../../../components/providers';
 
@@ -90,6 +91,20 @@ export default function InventoryPage() {
   // Merge inventory and velocity for table
   const items = inventory?.items || [];
   const velocityMap = new Map((velocity || []).map((v) => [v.productId, v]));
+
+  // Compute 7‑day trend based on current stock and daily run rate
+  const trendMap = new Map<string, number[]>();
+  items.forEach((prod) => {
+    const vel = velocityMap.get(prod.id);
+    const dailyRunRate = vel?.dailyRunRate ?? 0;
+    const start = prod.stockOnHand;
+    const points: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      const val = Math.max(0, Math.round(start - dailyRunRate * i));
+      points.push(val);
+    }
+    trendMap.set(prod.id, points);
+  });
 
   // Metrics
   const totalSkus = items.length;
@@ -212,6 +227,7 @@ export default function InventoryPage() {
                   <th className="py-3 px-4 text-center">Stock on Hand</th>
                   <th className="py-3 px-4 text-center">Reorder Lvl</th>
                   <th className="py-3 px-4 text-center">30-Day Run Rate</th>
+                  <th className="py-3 px-4 text-center">Trend</th>
                   <th className="py-3 px-4 text-center">Projected Stockout</th>
                   <th className="py-3 px-4 text-center">Status</th>
                   <th className="py-3 px-4 text-right">Actions</th>
@@ -239,6 +255,9 @@ export default function InventoryPage() {
                       </td>
                       <td className="py-3.5 px-4 text-center font-mono text-xs text-slate-300">
                         {vel ? `${vel.dailyRunRate} / day` : '—'}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <Sparkline data={trendMap.get(prod.id) ?? []} width={80} height={20} className="mx-auto" />
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         {vel?.daysUntilStockout !== null && vel?.daysUntilStockout !== undefined ? (

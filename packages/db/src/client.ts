@@ -1,5 +1,10 @@
 import { PrismaClient, Prisma } from '../generated/client';
 
+// Provide standard PostgreSQL URL fallback if runtime environment variable is stripped
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/compass_analytics';
+}
+
 /**
  * Global root PrismaClient instance.
  * Note: Under production / unprivileged runtime, this connects with the compass_app

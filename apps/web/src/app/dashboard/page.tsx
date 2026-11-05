@@ -33,12 +33,16 @@ export default function DashboardOverviewPage() {
   const { activeTenant } = useTenant();
   const [timeseriesInterval, setTimeseriesInterval] = useState<'hour' | 'day' | 'week' | 'month'>('day');
   const [liveAlert, setLiveAlert] = useState<LiveTransactionEvent | null>(null);
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
 
   // Queries
   const { data: summary, isLoading: isSummaryLoading, refetch: refetchSummary } = trpc.revenue.summary.useQuery();
   const { data: timeseries, isLoading: isTimeseriesLoading, refetch: refetchTimeseries } =
     trpc.revenue.timeseries.useQuery({
       interval: timeseriesInterval,
+      ...(fromDate && { from: new Date(fromDate) }),
+      ...(toDate && { to: new Date(toDate) }),
     });
   const { data: recent, isLoading: isRecentLoading, refetch: refetchRecent } = trpc.revenue.recent.useQuery({
     limit: 10,
@@ -279,6 +283,30 @@ export default function DashboardOverviewPage() {
             <p className="text-xs text-slate-400">
               Monetary values aggregated in Kenyan Shillings (KES)
             </p>
+          </div>
+
+          {/* Date Range Filter */}
+          <div className="flex items-center gap-2 mt-2 mb-4">
+            <label className="text-xs text-slate-400">From</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={e => setFromDate(e.target.value)}
+              className="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+            />
+            <label className="text-xs text-slate-400">To</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={e => setToDate(e.target.value)}
+              className="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+            />
+            <button
+              onClick={() => refetchTimeseries()}
+              className="px-2 py-1 rounded bg-emerald-500 text-white text-xs font-medium hover:bg-emerald-600"
+            >
+              Apply
+            </button>
           </div>
 
           {/* Interval Tabs */}

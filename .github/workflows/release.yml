@@ -46,7 +46,7 @@ jobs:
 
       - name: Build and Push Compass Web Image
         id: build-web-image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/web/Dockerfile
@@ -104,7 +104,7 @@ jobs:
 
       - name: Build and Push Compass Ingest Image
         id: build-ingest-image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./services/ingest
           file: ./services/ingest/Dockerfile

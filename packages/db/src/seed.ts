@@ -68,6 +68,7 @@ async function main() {
     [ORG_1.clerkOrgId]: [
       { sku: 'BAM-CEM-50KG', name: 'Bamburi Nguvu Cement 50kg', priceCents: 92000n, stockOnHand: 140, reorderLevel: 25 },
       { sku: 'CRW-VIN-4L', name: 'Crown Vinyl Matt 4L', priceCents: 245000n, stockOnHand: 32, reorderLevel: 10 },
+      { sku: 'NLS-3IN-1KG', name: 'Wire Nails 3 Inch 1kg', priceCents: 18000n, stockOnHand: 8, reorderLevel: 20 },
     ],
     [ORG_2.clerkOrgId]: [
       { sku: 'AV-HASS-BX', name: 'Organic Hass Avocado 10kg', priceCents: 150000n, stockOnHand: 65, reorderLevel: 15 },
@@ -78,17 +79,17 @@ async function main() {
       { sku: 'MM-SPC-1KG', name: 'Spiced Goat Meat 1kg', priceCents: 300000n, stockOnHand: 45, reorderLevel: 10 },
     ],
   };
-  const productMap = {};
+  const productMap: Record<string, any[]> = {};
   for (const orgId of Object.keys(prodTemplates)) {
     productMap[orgId] = [];
-    for (const tmpl of prodTemplates[orgId]) {
+    for (const tmpl of (prodTemplates as Record<string, any[]>)[orgId]) {
       const p = await prisma.product.create({ data: { orgId, ...tmpl } });
       productMap[orgId].push(p);
     }
   }
 
   // Demo customers per org
-  const customersByOrg = {
+  const customersByOrg: Record<string, { phone: string; name: string }[]> = {
     [ORG_1.clerkOrgId]: [
       { phone: '254712345678', name: 'Juma Kamau' },
       { phone: '254722987654', name: 'Amina Wanjiku' },
@@ -120,7 +121,7 @@ async function main() {
   }
 
   // ---------- Synthetic transaction generation (12 months) ----------
-  function mulberry32(a) {
+  function mulberry32(a: number) {
     return function () {
       let t = (a += 0x6d2b79f5);
       t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -128,7 +129,7 @@ async function main() {
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  const randInt = (min, max, rnd) => Math.floor(rnd() * (max - min + 1)) + min;
+  const randInt = (min: number, max: number, rnd: () => number) => Math.floor(rnd() * (max - min + 1)) + min;
   const ONE_DAY = 86400000;
   const now = new Date();
 
@@ -148,7 +149,7 @@ async function main() {
         const prod = prods[randInt(0, prods.length - 1, rnd)];
         const qty = randInt(1, 5, rnd);
         const amount = prod.priceCents * BigInt(qty);
-        const receipt = `RX${Math.floor(rnd() * 1e6).toString().padStart(6, '0')}`;
+        const receipt = `RX${org.shortcode.slice(-2)}${d.toString().padStart(3, '0')}${i.toString().padStart(3, '0')}${Math.floor(rnd() * 1000).toString().padStart(3, '0')}`;
         const paidAt = new Date(day.getTime() + randInt(0, ONE_DAY - 1, rnd));
         const tx = await prisma.transaction.create({
           data: {

@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@compass/db', '@compass/shared'],
-  output: 'standalone',
+  output: process.platform === 'win32' && !process.env.CI ? undefined : 'standalone',
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },

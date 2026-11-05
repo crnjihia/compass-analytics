@@ -4,7 +4,6 @@ import client from 'prom-client';
 // Register default metrics once (cpu, memory, event loop, etc.)
 client.collectDefaultMetrics({
   prefix: 'compass_',
-  timeout: 5000,
 });
 
 export async function GET() {

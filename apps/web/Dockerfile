@@ -28,6 +28,9 @@ RUN pnpm run db:generate
 # Build packages and Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_AUTH_MODE=dev
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bW9jay1jbGVyay1rZXktZm9yLWNpLWJ1aWxkLXRlc3RzLmNsZXJrLmFjY291bnRzLmRldiQ
+ENV CLERK_SECRET_KEY=sk_test_mock_secret_key_ci_build
 RUN pnpm --filter @compass/shared run build
 RUN pnpm --filter @compass/db run build
 RUN pnpm --filter @compass/web run build

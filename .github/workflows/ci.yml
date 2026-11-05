@@ -10,6 +10,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  AUTH_MODE: dev
+  NEXT_PUBLIC_AUTH_MODE: dev
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bW9jay1jbGVyay1rZXktZm9yLWNpLWJ1aWxkLXRlc3RzLmNsZXJrLmFjY291bnRzLmRldiQ
+  CLERK_SECRET_KEY: sk_test_mock_secret_key_ci_build
+  CLERK_WEBHOOK_SECRET: whsec_mock
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/compass_analytics
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/compass_analytics
+  REDIS_URL: redis://localhost:6379
+
 jobs:
   lint-and-typecheck:
     name: Lint & Typecheck

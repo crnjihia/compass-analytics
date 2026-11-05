@@ -1,4 +1,5 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+// @vitest-environment jsdom
+import { renderHook, act } from '@testing-library/react';
 import { useLiveRevenue, LiveStreamStatus } from '../useLiveRevenue';
 
 describe('useLiveRevenue hook', () => {
@@ -7,48 +8,46 @@ describe('useLiveRevenue hook', () => {
   afterEach(() => {
     // Restore original EventSource
     (global as any).EventSource = originalEventSource;
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('switches to polling after consecutive SSE errors', () => {
-    const mockClose = jest.fn();
-    const mockAddEventListener = jest.fn();
-    const mockRemoveEventListener = jest.fn();
-    const mockAddEventListenerMap: Record<string, Function> = {};
+    const mockClose = vi.fn();
+    const mockAddEventListener = vi.fn();
+    const mockRemoveEventListener = vi.fn();
+    const handlers: Record<string, Function> = {};
 
     // Mock EventSource implementation
-    (global as any).EventSource = jest.fn().mockImplementation(() => {
-      return {
+    (global as any).EventSource = vi.fn().mockImplementation(() => {
+      const instance = {
         close: mockClose,
+        onopen: null as any,
+        onerror: null as any,
         addEventListener: (type: string, handler: Function) => {
           mockAddEventListener(type, handler);
-          mockAddEventListenerMap[type] = handler;
+          handlers[type] = handler;
         },
         removeEventListener: mockRemoveEventListener,
-        // Simulate error after onopen
-        dispatchEvent: (type: string, event?: any) => {
-          const handler = mockAddEventListenerMap[type];
-          if (handler) handler(event);
-        },
       };
+      return instance;
     });
 
-    const onRefetch = jest.fn();
+    const onRefetch = vi.fn();
     const { result } = renderHook(() =>
       useLiveRevenue({ orgId: 'org_test', onRefetchNeeded: onRefetch })
     );
 
     // Simulate onopen
     act(() => {
-      const onopen = (global as any).EventSource.mock.results[0].value.addEventListener.mock.calls.find(c => c[0] === 'open')[1];
-      onopen();
+      const es = (global as any).EventSource.mock.results[0].value;
+      if (es.onopen) es.onopen();
     });
 
     // Simulate three consecutive errors
     for (let i = 0; i < 3; i++) {
       act(() => {
-        const onerror = (global as any).EventSource.mock.results[0].value.addEventListener.mock.calls.find(c => c[0] === 'error')[1];
-        onerror();
+        const es = (global as any).EventSource.mock.results[0].value;
+        if (es.onerror) es.onerror();
       });
     }
 
@@ -58,30 +57,33 @@ describe('useLiveRevenue hook', () => {
   });
 
   test('receives transaction event and calls callbacks', () => {
-    const mockClose = jest.fn();
-    const mockAddEventListener = jest.fn();
+    const mockClose = vi.fn();
+    const mockAddEventListener = vi.fn();
     const handlers: Record<string, Function> = {};
 
-    (global as any).EventSource = jest.fn().mockImplementation(() => {
+    (global as any).EventSource = vi.fn().mockImplementation(() => {
       return {
         close: mockClose,
+        onopen: null as any,
+        onerror: null as any,
         addEventListener: (type: string, handler: Function) => {
           mockAddEventListener(type, handler);
           handlers[type] = handler;
         },
-        removeEventListener: jest.fn(),
+        removeEventListener: vi.fn(),
       };
     });
 
-    const onTxn = jest.fn();
-    const onRefetch = jest.fn();
+    const onTxn = vi.fn();
+    const onRefetch = vi.fn();
     const { result } = renderHook(() =>
       useLiveRevenue({ orgId: 'org_test', onTransaction: onTxn, onRefetchNeeded: onRefetch })
     );
 
     // Simulate onopen & connected event
     act(() => {
-      handlers['open']?.();
+      const es = (global as any).EventSource.mock.results[0].value;
+      if (es.onopen) es.onopen();
       handlers['connected']?.({ data: '{}' });
     });
 

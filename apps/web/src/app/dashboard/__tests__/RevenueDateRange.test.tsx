@@ -1,15 +1,31 @@
+// @vitest-environment jsdom
+import '@testing-library/jest-dom';
+import React from 'react';
 import { render } from '@testing-library/react';
-import DashboardOverviewPage from '../dashboard/page';
+import DashboardOverviewPage from '../page';
 
-jest.mock('../../../utils/trpc', () => ({
+vi.mock('../../../utils/trpc', () => ({
   trpc: {
     revenue: {
-      summary: { useQuery: jest.fn(() => ({ data: null, isLoading: false, refetch: jest.fn() })) },
-      timeseries: { useQuery: jest.fn(() => ({ data: null, isLoading: false, refetch: jest.fn() })) },
-      recent: { useQuery: jest.fn(() => ({ data: null, isLoading: false, refetch: jest.fn() })) },
+      summary: { useQuery: vi.fn(() => ({ data: null, isLoading: false, refetch: vi.fn() })) },
+      timeseries: { useQuery: vi.fn(() => ({ data: null, isLoading: false, refetch: vi.fn() })) },
+      recent: { useQuery: vi.fn(() => ({ data: null, isLoading: false, refetch: vi.fn() })) },
     },
-    // mock other routers if required
   },
+}));
+
+vi.mock('../../../components/providers', () => ({
+  useTenant: () => ({
+    activeTenant: { id: 'org_baraka_hardware', name: 'Baraka Hardware Ltd', shortcode: '890123' },
+  }),
+}));
+
+vi.mock('../../../hooks/useLiveRevenue', () => ({
+  useLiveRevenue: () => ({
+    status: 'connected',
+    lastTransaction: null,
+    isPolling: false,
+  }),
 }));
 
 test('renders date range filter inputs and apply button', () => {

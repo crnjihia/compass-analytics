@@ -6,6 +6,8 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const ORG_1_ID = 'org_baraka_hardware';
 const ORG_2_ID = 'org_nairobi_fresh';

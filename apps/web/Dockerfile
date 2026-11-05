@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Next.js Web App in pnpm Monorepo
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 RUN npm install -g pnpm@12.9.1
@@ -36,7 +36,7 @@ RUN pnpm --filter @compass/db run build
 RUN pnpm --filter @compass/web run build
 
 # Stage 3: Runner
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

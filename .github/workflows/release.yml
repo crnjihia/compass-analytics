@@ -66,7 +66,7 @@ jobs:
           DOCKER_CONTENT_TRUST: 0
 
       - name: Upload Web SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-web
           path: sbom-web.spdx.json
@@ -124,7 +124,7 @@ jobs:
           DOCKER_CONTENT_TRUST: 0
 
       - name: Upload Ingest SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-ingest
           path: sbom-ingest.spdx.json
